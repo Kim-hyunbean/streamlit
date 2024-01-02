@@ -1,23 +1,8 @@
-pip install streamlit
-pip install plotly
-pip install pyngrok
-
-pip install streamlit_folium
-pip install folium
-pip install geopy
-pip install haversine
-pip install joblib
-
-pip install xgboost
-pip install tensorflow
-pip install streamlit-calendar
-
 # 라이브러리 불러오기
 
 import pandas as pd
 import numpy as np
 import datetime
-import joblib
 from keras.models import load_model
 from haversine import haversine
 from urllib.parse import quote
