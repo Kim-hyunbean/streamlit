@@ -1,3 +1,16 @@
+!pip install streamlit
+!pip install plotly
+!pip install pyngrok
+
+!pip install streamlit_folium
+!pip install folium
+!pip install geopy
+!pip install haversine
+!pip install joblib
+
+!pip install xgboost
+!pip install tensorflow
+!pip install streamlit-calendar
 
 # 라이브러리 불러오기
 
