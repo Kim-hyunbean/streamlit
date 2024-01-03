@@ -1,0 +1,11 @@
+streamlit
+plotly
+pyngrok
+streamlit_folium
+folium
+geopy
+haversine
+joblib
+xgboost
+tensorflow
+streamlit-calendar
