@@ -71,7 +71,7 @@ address = '서울특별시 종로구 성균관로 25-2'
 
 st.set_page_config(layout="wide")
 
-st.image('https://github.com/Kim-hyunbean/streamlit/blob/main/%EB%A1%9C%EA%B3%A0.png', width=200)
+st.image('https://github.com/Kim-hyunbean/streamlit/main/logo.png', width=200)
 # tabs 만들기
 tab1, tab2, tab3= st.tabs(['Bee119 신고 출동 case1', 'Bee119 신고 출동 case2' , '양봉장 밀원 분포지도'])
 
