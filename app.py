@@ -110,58 +110,53 @@ with tab1:
     with col123:
         phonenum = st.text_input('소방서입력',value='종로소방서',label_visibility='collapsed')
 
-    with st.form(key='tab1_first'):
+    #### 거리주소 -> 위도/경도 변환 함수 호출
+    lati, longit = geocoding(address)
 
-        ### 버튼 생성
-        if st.form_submit_button(label='위치조회'):
+    display_df = pd.read_csv('/content/drive/MyDrive/빅프csv/양봉qhd.csv',encoding="cp949")
+    display_df2 = pd.read_csv('/content/drive/MyDrive/빅프csv/서울시소방서위치.csv',encoding="cp949")
 
-            #### 거리주소 -> 위도/경도 변환 함수 호출
-            lati, longit = geocoding(address)
+    distance = []
+    patient = (lati, longit)
 
-            display_df = pd.read_csv('https://raw.githubusercontent.com/Kim-hyunbean/streamlit/main/%EC%96%91%EB%B4%89qhd.csv',encoding='cp949')
-            display_df2 = pd.read_csv('https://raw.githubusercontent.com/Kim-hyunbean/streamlit/main/%EC%84%9C%EC%9A%B8%EC%8B%9C%EC%86%8C%EB%B0%A9%EC%84%9C%EC%9C%84%EC%B9%98.csv',encoding='cp949')
+    for idx, row in display_df.iterrows():
+        distance.append(round(haversine((row['위도'], row['경도']), patient, unit='km'), 2))
 
-            distance = []
-            patient = (lati, longit)
-
-            for idx, row in display_df.iterrows():
-                distance.append(round(haversine((row['위도'], row['경도']), patient, unit='km'), 2))
-
-            display_df['거리'] = distance
-            display_df['거리구분'] = pd.cut(display_df['거리'], bins=[-1, 2, 5, 10, 100],
+    display_df['거리'] = distance
+    display_df['거리구분'] = pd.cut(display_df['거리'], bins=[-1, 2, 5, 10, 100],
                                  labels=['2km이내', '5km이내', '10km이내', '10km이상'])
 
-            display_df = display_df[display_df.columns].sort_values(['거리구분', '거리'], ascending=[True, True])
-            display_df.reset_index(drop=True, inplace=True)
-            short_load = display_df[['위도','경도']]
+    display_df = display_df[display_df.columns].sort_values(['거리구분', '거리'], ascending=[True, True])
+    display_df.reset_index(drop=True, inplace=True)
+    short_load = display_df[['위도','경도']]
 
-            display_dff = display_df.drop(['위도','경도'],axis=1)
+    display_dff = display_df.drop(['위도','경도'],axis=1)
 
-            distance2 = []
+    distance2 = []
 
-            if display_dff['거리'].iloc[0] <= 10 :
-                st.markdown(f"### 예상되는 분봉 장소는 {display_dff['이름'].iloc[0]}입니다")
+    if display_dff['거리'].iloc[0] <= 10 :
+        st.markdown(f"### 예상되는 분봉 장소는 {display_dff['이름'].iloc[0]}입니다")
 
-            #### 사고위치
-            with st.expander("신고 출동 지도", expanded=True):
-                m = folium.Map(location=[lati,longit], zoom_start=14)
+    #### 사고위치
+    with st.expander("신고 출동 지도", expanded=True):
+        m = folium.Map(location=[lati,longit], zoom_start=14)
 
-                html = """<!DOCTYPE html>
+        html = """<!DOCTYPE html>
                     <html>
                         <table style="height: 65px; width: 330px;"> <tbody> <tr>
                             <td style="background-color: #000000;">
                             <div style="color: #FFF200;text-align:center;">사고 구역</div></td>
                             <td style="width: 215px;background-color: #EDEDED;">{}</td>""".format(address)+"""</tr>
                         </tbody> </table> </html> """
-                iframe = branca.element.IFrame(html=html, width=350, height=90)
-                popup_text = folium.Popup(iframe,parse_html=True)
-                icon = folium.Icon(color="red")
-                folium.Marker(location=[lati , longit], popup=popup_text, tooltip="사고 구역 : "+address, icon=icon).add_to(m)
+        iframe = branca.element.IFrame(html=html, width=350, height=90)
+        popup_text = folium.Popup(iframe,parse_html=True)
+        icon = folium.Icon(color="red")
+        folium.Marker(location=[lati , longit], popup=popup_text, tooltip="사고 구역 : "+address, icon=icon).add_to(m)
 
 
-                ###### 양봉위치
-                for idx, row in display_df[:].iterrows():
-                    html = """<!DOCTYPE html>
+        ###### 양봉위치
+        for idx, row in display_df[:].iterrows():
+            html = """<!DOCTYPE html>
                     <html>
                         <table style="height: 126px; width: 330px;"> <tbody> <tr>
                             <td style="background-color: #F2952F;">
@@ -175,15 +170,15 @@ with tab1:
                             <td style="width: 230px;background-color: #FFBF00;text-align: center; color: white;">{}</td>""".format(row['연락처'])+"""</tr>
                         </tbody> </table> </html> """
 
-                    iframe = branca.element.IFrame(html=html, width=350, height=150)
-                    popup_text = folium.Popup(iframe,parse_html=True)
-                    icon = folium.Icon(icon="forumbee",color="orange",prefix="fa")
-                    folium.Marker(location=[row['위도'], row['경도']],
-                                  popup=popup_text, tooltip=row['이름'], icon=icon).add_to(m)
+            iframe = branca.element.IFrame(html=html, width=350, height=150)
+            popup_text = folium.Popup(iframe,parse_html=True)
+            icon = folium.Icon(icon="forumbee",color="orange",prefix="fa")
+            folium.Marker(location=[row['위도'], row['경도']],
+                            popup=popup_text, tooltip=row['이름'], icon=icon).add_to(m)
 
-                # 소방서위치
-                for idx, row in display_df2[:].iterrows():
-                    html = """<!DOCTYPE html>
+        # 소방서위치
+        for idx, row in display_df2[:].iterrows():
+            html = """<!DOCTYPE html>
                     <html>
                         <table style="height: 126px; width: 330px;"> <tbody> <tr>
                             <td style="background-color: #72AF26;">
@@ -197,26 +192,26 @@ with tab1:
                             <td style="width: 230px;background-color: #EDEDED;text-align: center; color: black;">{}</td>""".format(row['전화번호'])+"""</tr>
                         </tbody> </table> </html> """
 
-                    iframe = branca.element.IFrame(html=html, width=350, height=150)
-                    popup_text = folium.Popup(iframe,parse_html=True)
-                    if row['꿀벌포획기 보유'].strip().lower() == '보유':
-                        icon = folium.Icon(icon="fire-extinguisher",color="green",prefix="fa")
-                    else:
-                        icon = folium.Icon(icon="fire-extinguisher",color="gray",prefix="fa")
-                    folium.Marker(location=[row['위도'], row['경도']],
-                                  popup=popup_text, tooltip=row['이름'], icon=icon).add_to(m)
+            iframe = branca.element.IFrame(html=html, width=350, height=150)
+            popup_text = folium.Popup(iframe,parse_html=True)
+            if row['꿀벌포획기 보유'].strip().lower() == '보유':
+                icon = folium.Icon(icon="fire-extinguisher",color="green",prefix="fa")
+            else:
+                icon = folium.Icon(icon="fire-extinguisher",color="gray",prefix="fa")
+            folium.Marker(location=[row['위도'], row['경도']],
+                    popup=popup_text, tooltip=row['이름'], icon=icon).add_to(m)
 
-                start = (longit,lati)
+        start = (longit,lati)
 
-                goal = (short_load.iloc[0]['경도'],short_load.iloc[0]['위도'])
+        goal = (short_load.iloc[0]['경도'],short_load.iloc[0]['위도'])
 
-                short = results(get_optimal_route(start,goal))
-                folium.PolyLine(locations=short, color='#3098FE').add_to(m)
+        short = results(get_optimal_route(start,goal))
+        folium.PolyLine(locations=short, color='#3098FE').add_to(m)
 
 
-                st_folium(m, width=1000)
-                st.dataframe(display_dff)
-
+        st_folium(m, width=1000)
+        st.dataframe(display_dff)
+        
 with tab2:
 
     # 제목 넣기
@@ -247,80 +242,75 @@ with tab2:
     with col123:
         phonenum = st.text_input('소방서입력',value='동작소방서',label_visibility='collapsed',key='unique_text_key2')
 
-    with st.form(key='tab2_second'):
+    #### 거리주소 -> 위도/경도 변환 함수 호출
+    lati, longit = geocoding(address1)
 
-        ### 버튼 생성
-        if st.form_submit_button(label='위치조회'):
+    display_df = pd.read_csv('/content/drive/MyDrive/빅프csv/양봉qhd.csv',encoding="cp949")
+    display_df2 = pd.read_csv('/content/drive/MyDrive/빅프csv/서울시소방서위치.csv',encoding="cp949")
 
-            #### 거리주소 -> 위도/경도 변환 함수 호출
-            lati, longit = geocoding(address1)
+    distance = []
+    patient = (lati, longit)
 
-            display_df = pd.read_csv('https://raw.githubusercontent.com/Kim-hyunbean/streamlit/main/%EC%96%91%EB%B4%89qhd.csv',encoding='cp949')
-            display_df2 = pd.read_csv('https://raw.githubusercontent.com/Kim-hyunbean/streamlit/main/%EC%84%9C%EC%9A%B8%EC%8B%9C%EC%86%8C%EB%B0%A9%EC%84%9C%EC%9C%84%EC%B9%98.csv',encoding='cp949')
+    for idx, row in display_df.iterrows():
+        distance.append(round(haversine((row['위도'], row['경도']), patient, unit='km'), 2))
 
-            distance = []
-            patient = (lati, longit)
-
-            for idx, row in display_df.iterrows():
-                distance.append(round(haversine((row['위도'], row['경도']), patient, unit='km'), 2))
-
-            display_df['거리'] = distance
-            display_df['거리구분'] = pd.cut(display_df['거리'], bins=[-1, 2, 5, 10, 100],
+    display_df['거리'] = distance
+    display_df['거리구분'] = pd.cut(display_df['거리'], bins=[-1, 2, 5, 10, 100],
                                  labels=['2km이내', '5km이내', '10km이내', '10km이상'])
 
-            display_df = display_df[display_df.columns].sort_values(['거리구분', '거리'], ascending=[True, True])
-            display_df.reset_index(drop=True, inplace=True)
+    display_df = display_df[display_df.columns].sort_values(['거리구분', '거리'], ascending=[True, True])
+    display_df.reset_index(drop=True, inplace=True)
 
-            display_bee = display_df.drop(['위도','경도'],axis=1)
+    display_bee = display_df.drop(['위도','경도'],axis=1)
 
 
-            distance2 = []
-            distanceGreen = []
+    distance2 = []
+    distanceGreen = []
 
-            for idx, row in display_df2.iterrows():
-                if row['꿀벌포획기 보유'].strip().lower() == '보유':
-                    distanceGreen.append(round(haversine((row['위도'], row['경도']), patient, unit='km'), 2))
-                distance2.append(round(haversine((row['위도'], row['경도']), patient, unit='km'), 2))
+    for idx, row in display_df2.iterrows():
+        if row['꿀벌포획기 보유'].strip().lower() == '보유':
+            distanceGreen.append(round(haversine((row['위도'], row['경도']), patient, unit='km'), 2))
+        distance2.append(round(haversine((row['위도'], row['경도']), patient, unit='km'), 2))
 
-            display_df2['거리'] = distance2
-            display_df2['거리구분'] = pd.cut(display_df2['거리'], bins=[-1, 2, 5, 10, 100],
-                                 labels=['2km이내', '5km이내', '10km이내', '10km이상'])
+    display_df2['거리'] = distance2
+    display_df2['거리구분'] = pd.cut(display_df2['거리'], bins=[-1, 2, 5, 10, 100],
+                            labels=['2km이내', '5km이내', '10km이내', '10km이상'])
 
-            display_df2 = display_df2[display_df2.columns].sort_values(['거리구분', '거리'], ascending=[True, True])
-            display_df2.reset_index(drop=True, inplace=True)
+    display_df2 = display_df2[display_df2.columns].sort_values(['거리구분', '거리'], ascending=[True, True])
+    display_df2.reset_index(drop=True, inplace=True)
 
-            dfgreen = display_df2[display_df2['꿀벌포획기 보유'] == '보유']
+    dfgreen = display_df2[display_df2['꿀벌포획기 보유'] == '보유']
 
-            if display_df['거리'].iloc[0] > display_df2['거리'].iloc[0] and display_df['거리'].iloc[0] > dfgreen['거리'].iloc[0]:
-                short_load = dfgreen[['위도','경도']]
-                display_dff = display_df2.drop(['위도','경도'],axis=1)       
-            else :
-                short_load = display_df[['위도','경도']]
-                display_dff = display_df.drop(['위도','경도'],axis=1)
-                
-            if display_bee['거리'].iloc[0] <= 10 :
-                st.markdown(f"### 예상되는 분봉 장소는 {display_bee['이름'].iloc[0]}입니다")
+    if display_df['거리'].iloc[0] > display_df2['거리'].iloc[0] and display_df['거리'].iloc[0] > dfgreen['거리'].iloc[0]:
+        short_load = dfgreen[['위도','경도']]
+        display_dff = display_df2.drop(['위도','경도'],axis=1)
+    else :
+        short_load = display_df[['위도','경도']]
+        display_dff = display_df.drop(['위도','경도'],axis=1)
 
-            #### 사고위치
-            with st.expander("신고 출동 지도", expanded=True):
-                m = folium.Map(location=[lati,longit], zoom_start=14)
+    if display_bee['거리'].iloc[0] <= 10 :
+        st.markdown(f"### 예상되는 분봉 장소는 {display_bee['이름'].iloc[0]}입니다")
 
-                html = """<!DOCTYPE html>
+    #### 사고위치
+    with st.expander("신고 출동 지도", expanded=True):
+        m = folium.Map(location=[lati,longit], zoom_start=14)
+
+        html = """<!DOCTYPE html>
                     <html>
                         <table style="height: 65px; width: 330px;"> <tbody> <tr>
                             <td style="background-color: #000000;">
                             <div style="color: #FFF200;text-align:center;">사고 구역</div></td>
                             <td style="width: 215px;background-color: #EDEDED;">{}</td>""".format(address1)+"""</tr>
                         </tbody> </table> </html> """
-                iframe = branca.element.IFrame(html=html, width=350, height=90)
-                popup_text = folium.Popup(iframe,parse_html=True)
-                icon = folium.Icon(color="red")
-                folium.Marker(location=[lati , longit], popup=popup_text, tooltip="사고 구역 : "+address1, icon=icon).add_to(m)
+        iframe = branca.element.IFrame(html=html, width=350, height=90)
+        popup_text = folium.Popup(iframe,parse_html=True)
+        icon = folium.Icon(color="red")
+        folium.Marker(location=[lati , longit], popup=popup_text, tooltip="사고 구역 : "+address1, icon=icon).add_to(m)
 
 
-                ###### 양봉위치
-                for idx, row in display_df[:].iterrows():
-                    html = """<!DOCTYPE html>
+        ###### 양봉위치
+        for idx, row in display_df[:].iterrows():
+            html = """<!DOCTYPE html>
                     <html>
                         <table style="height: 126px; width: 330px;"> <tbody> <tr>
                             <td style="background-color: #F2952F;">
@@ -334,16 +324,16 @@ with tab2:
                             <td style="width: 230px;background-color: #FFBF00;text-align: center; color: white;">{}</td>""".format(row['연락처'])+"""</tr>
                         </tbody> </table> </html> """
 
-                    iframe = branca.element.IFrame(html=html, width=350, height=150)
-                    popup_text = folium.Popup(iframe,parse_html=True)
-                    icon = folium.Icon(icon="forumbee",color="orange",prefix="fa")
+            iframe = branca.element.IFrame(html=html, width=350, height=150)
+            popup_text = folium.Popup(iframe,parse_html=True)
+            icon = folium.Icon(icon="forumbee",color="orange",prefix="fa")
 
-                    folium.Marker(location=[row['위도'], row['경도']],
-                                  popup=popup_text, tooltip=row['이름'], icon=icon).add_to(m)
-                                    
-                # 소방서위치
-                for idx, row in display_df2[:].iterrows():
-                    html = """<!DOCTYPE html>
+            folium.Marker(location=[row['위도'], row['경도']],
+                            popup=popup_text, tooltip=row['이름'], icon=icon).add_to(m)
+
+        # 소방서위치
+        for idx, row in display_df2[:].iterrows():
+            html = """<!DOCTYPE html>
                     <html>
                         <table style="height: 126px; width: 330px;"> <tbody> <tr>
                             <td style="background-color: #72AF26;">
@@ -357,26 +347,25 @@ with tab2:
                             <td style="width: 230px;background-color: #EDEDED;text-align: center; color: black;">{}</td>""".format(row['전화번호'])+"""</tr>
                         </tbody> </table> </html> """
 
-                    iframe = branca.element.IFrame(html=html, width=350, height=150)
-                    popup_text = folium.Popup(iframe,parse_html=True)
-                    if row['꿀벌포획기 보유'].strip().lower() == '보유':
-                        icon = folium.Icon(icon="fire-extinguisher",color="green",prefix="fa")
-                    else:
-                        icon = folium.Icon(icon="fire-extinguisher",color="gray",prefix="fa")
-                    folium.Marker(location=[row['위도'], row['경도']],
-                                  popup=popup_text, tooltip=row['이름'], icon=icon).add_to(m)
+            iframe = branca.element.IFrame(html=html, width=350, height=150)
+            popup_text = folium.Popup(iframe,parse_html=True)
+            if row['꿀벌포획기 보유'].strip().lower() == '보유':
+                icon = folium.Icon(icon="fire-extinguisher",color="green",prefix="fa")
+            else:
+                icon = folium.Icon(icon="fire-extinguisher",color="gray",prefix="fa")
+            folium.Marker(location=[row['위도'], row['경도']],
+                            popup=popup_text, tooltip=row['이름'], icon=icon).add_to(m)
 
-                start = (longit,lati)
+        start = (longit,lati)
 
-                goal = (short_load.iloc[0]['경도'],short_load.iloc[0]['위도'])
+        goal = (short_load.iloc[0]['경도'],short_load.iloc[0]['위도'])
 
-                short = results(get_optimal_route(start,goal))
-                folium.PolyLine(locations=short, color='#3098FE').add_to(m)
+        short = results(get_optimal_route(start,goal))
+        folium.PolyLine(locations=short, color='#3098FE').add_to(m)
 
 
-                st_folium(m, width=1000)
-                st.dataframe(display_dff)
-
+        st_folium(m, width=1000)
+        st.dataframe(display_dff)
 
 with tab3:
     st.markdown("## 양봉장 밀원 분포지도")
