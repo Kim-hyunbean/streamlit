@@ -113,8 +113,8 @@ with tab1:
     #### 거리주소 -> 위도/경도 변환 함수 호출
     lati, longit = geocoding(address)
 
-    display_df = pd.read_csv('/content/drive/MyDrive/빅프csv/양봉qhd.csv',encoding="cp949")
-    display_df2 = pd.read_csv('/content/drive/MyDrive/빅프csv/서울시소방서위치.csv',encoding="cp949")
+    display_df = pd.read_csv('https://raw.githubusercontent.com/Kim-hyunbean/streamlit/main/%EC%96%91%EB%B4%89qhd.csv',encoding="cp949")
+    display_df2 = pd.read_csv('https://raw.githubusercontent.com/Kim-hyunbean/streamlit/main/%EC%84%9C%EC%9A%B8%EC%8B%9C%EC%86%8C%EB%B0%A9%EC%84%9C%EC%9C%84%EC%B9%98.csv',encoding="cp949")
 
     distance = []
     patient = (lati, longit)
@@ -245,8 +245,8 @@ with tab2:
     #### 거리주소 -> 위도/경도 변환 함수 호출
     lati, longit = geocoding(address1)
 
-    display_df = pd.read_csv('/content/drive/MyDrive/빅프csv/양봉qhd.csv',encoding="cp949")
-    display_df2 = pd.read_csv('/content/drive/MyDrive/빅프csv/서울시소방서위치.csv',encoding="cp949")
+    display_df = pd.read_csv('https://raw.githubusercontent.com/Kim-hyunbean/streamlit/main/%EC%96%91%EB%B4%89qhd.csv',encoding="cp949")
+    display_df2 = pd.read_csv('https://raw.githubusercontent.com/Kim-hyunbean/streamlit/main/%EC%84%9C%EC%9A%B8%EC%8B%9C%EC%86%8C%EB%B0%A9%EC%84%9C%EC%9C%84%EC%B9%98.csv',encoding="cp949")
 
     distance = []
     patient = (lati, longit)
